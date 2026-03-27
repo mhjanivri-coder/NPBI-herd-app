@@ -1,8 +1,8 @@
-# Buffalo Herd App - Phase 2
+# Buffalo Herd App - Phase 3
 
 Included:
-- phase 1 base
-- edit animal
-- browser local save using localStorage
+- phase 2 features
+- delete selected animal
+- clear all browser data with confirmation
 
 Upload these files directly to the GitHub repository root and redeploy.
