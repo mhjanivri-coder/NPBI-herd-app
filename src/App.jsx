@@ -1,9 +1,10 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import "./styles.css";
 
 const BREEDS = ["Murrah buffalo", "Nili-Ravi buffalo"];
 const SEX_OPTIONS = ["Female", "Male"];
 const STATUS_OPTIONS = ["Active (present in herd)", "Dead", "Culled"];
+const STORAGE_KEY = "buffalo_herd_app_phase_2";
 
 const EMPTY_ANIMAL = {
   tagNo: "",
@@ -56,14 +57,32 @@ function StatCard({ title, value }) {
   );
 }
 
+function loadSavedAnimals() {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
 export default function App() {
-  const [animals, setAnimals] = useState([]);
+  const [animals, setAnimals] = useState(() => loadSavedAnimals());
   const [selectedId, setSelectedId] = useState(null);
   const [search, setSearch] = useState("");
   const [view, setView] = useState("current");
   const [showAdd, setShowAdd] = useState(false);
-  const [form, setForm] = useState({ ...EMPTY_ANIMAL });
+  const [showEdit, setShowEdit] = useState(false);
   const [message, setMessage] = useState("");
+  const [form, setForm] = useState({ ...EMPTY_ANIMAL });
+  const [editForm, setEditForm] = useState({ ...EMPTY_ANIMAL });
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(animals));
+  }, [animals]);
 
   const activeAnimals = useMemo(
     () => animals.filter((animal) => !isArchived(animal)),
@@ -128,6 +147,32 @@ export default function App() {
     setMessage("Animal added successfully.");
   }
 
+  function openEditAnimal() {
+    if (!selectedAnimal) return;
+    setEditForm({ ...selectedAnimal });
+    setShowEdit(true);
+    setMessage("");
+  }
+
+  function saveEditedAnimal() {
+    const prepared = normalizeAnimal(editForm);
+
+    if (!prepared.tagNo.trim()) {
+      setMessage("Tag No. is required.");
+      return;
+    }
+
+    const nextAnimals = animals
+      .map((animal) =>
+        animal.id === selectedAnimal.id ? { ...animal, ...prepared } : animal
+      )
+      .sort(sortByTag);
+
+    setAnimals(nextAnimals);
+    setShowEdit(false);
+    setMessage("Animal updated successfully.");
+  }
+
   return (
     <div className="page">
       <div className="container">
@@ -135,8 +180,9 @@ export default function App() {
           <div className="header-row">
             <div>
               <h1>Buffalo Animal Data Recording App</h1>
-              <p>Clean restart · Phase 1 base</p>
+              <p>Phase 2 · edit animal + browser save</p>
             </div>
+
             <button
               className="primary-btn"
               onClick={() => setShowAdd((prev) => !prev)}
@@ -157,9 +203,7 @@ export default function App() {
                 <span>Breed</span>
                 <select
                   value={form.breed}
-                  onChange={(e) =>
-                    setForm((prev) => ({ ...prev, breed: e.target.value }))
-                  }
+                  onChange={(e) => setForm((prev) => ({ ...prev, breed: e.target.value }))}
                 >
                   {BREEDS.map((breed) => (
                     <option key={breed} value={breed}>
@@ -173,9 +217,7 @@ export default function App() {
                 <span>Tag No.</span>
                 <input
                   value={form.tagNo}
-                  onChange={(e) =>
-                    setForm((prev) => ({ ...prev, tagNo: e.target.value }))
-                  }
+                  onChange={(e) => setForm((prev) => ({ ...prev, tagNo: e.target.value }))}
                 />
               </label>
 
@@ -183,9 +225,7 @@ export default function App() {
                 <span>Sex</span>
                 <select
                   value={form.sex}
-                  onChange={(e) =>
-                    setForm((prev) => ({ ...prev, sex: e.target.value }))
-                  }
+                  onChange={(e) => setForm((prev) => ({ ...prev, sex: e.target.value }))}
                 >
                   {SEX_OPTIONS.map((sex) => (
                     <option key={sex} value={sex}>
@@ -200,9 +240,7 @@ export default function App() {
                 <input
                   placeholder="dd/mm/yyyy"
                   value={form.dob}
-                  onChange={(e) =>
-                    setForm((prev) => ({ ...prev, dob: e.target.value }))
-                  }
+                  onChange={(e) => setForm((prev) => ({ ...prev, dob: e.target.value }))}
                 />
               </label>
 
@@ -286,6 +324,133 @@ export default function App() {
           </section>
         )}
 
+        {showEdit && (
+          <section className="panel">
+            <h2>Edit Animal</h2>
+
+            <div className="grid">
+              <label className="field">
+                <span>Breed</span>
+                <select
+                  value={editForm.breed}
+                  onChange={(e) => setEditForm((prev) => ({ ...prev, breed: e.target.value }))}
+                >
+                  {BREEDS.map((breed) => (
+                    <option key={breed} value={breed}>
+                      {breed}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="field">
+                <span>Tag No.</span>
+                <input
+                  value={editForm.tagNo}
+                  onChange={(e) => setEditForm((prev) => ({ ...prev, tagNo: e.target.value }))}
+                />
+              </label>
+
+              <label className="field">
+                <span>Sex</span>
+                <select
+                  value={editForm.sex}
+                  onChange={(e) => setEditForm((prev) => ({ ...prev, sex: e.target.value }))}
+                >
+                  {SEX_OPTIONS.map((sex) => (
+                    <option key={sex} value={sex}>
+                      {sex}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="field">
+                <span>Date of Birth</span>
+                <input
+                  placeholder="dd/mm/yyyy"
+                  value={editForm.dob}
+                  onChange={(e) => setEditForm((prev) => ({ ...prev, dob: e.target.value }))}
+                />
+              </label>
+
+              <label className="field">
+                <span>Identification Mark</span>
+                <input
+                  value={editForm.identificationMark}
+                  onChange={(e) =>
+                    setEditForm((prev) => ({
+                      ...prev,
+                      identificationMark: e.target.value,
+                    }))
+                  }
+                />
+              </label>
+
+              <label className="field">
+                <span>Status</span>
+                <select
+                  value={editForm.status}
+                  onChange={(e) =>
+                    setEditForm((prev) =>
+                      normalizeAnimal({ ...prev, status: e.target.value })
+                    )
+                  }
+                >
+                  {STATUS_OPTIONS.map((status) => (
+                    <option key={status} value={status}>
+                      {status}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              {editForm.status !== "Active (present in herd)" && (
+                <>
+                  <label className="field">
+                    <span>Date of Death / Culling</span>
+                    <input
+                      placeholder="dd/mm/yyyy"
+                      value={editForm.exitDate}
+                      onChange={(e) =>
+                        setEditForm((prev) => ({
+                          ...prev,
+                          exitDate: e.target.value,
+                        }))
+                      }
+                    />
+                  </label>
+
+                  <label className="field">
+                    <span>Reason of Death / Culling</span>
+                    <input
+                      value={editForm.exitReason}
+                      onChange={(e) =>
+                        setEditForm((prev) => ({
+                          ...prev,
+                          exitReason: e.target.value,
+                        }))
+                      }
+                    />
+                  </label>
+                </>
+              )}
+            </div>
+
+            <div className="button-row">
+              <button className="primary-btn" onClick={saveEditedAnimal}>
+                Save Changes
+              </button>
+              <button
+                className="secondary-btn"
+                onClick={() => setShowEdit(false)}
+              >
+                Cancel
+              </button>
+            </div>
+          </section>
+        )}
+
         <section className="stats-grid">
           <StatCard title="Current Herd" value={stats.currentHerd} />
           <StatCard title="Females" value={stats.females} />
@@ -345,7 +510,18 @@ export default function App() {
           </section>
 
           <section className="panel">
-            <h2>Selected Animal Preview</h2>
+            <div className="header-row">
+              <div>
+                <h2>Selected Animal Preview</h2>
+                <p>Data saves automatically in this browser.</p>
+              </div>
+
+              {selectedAnimal && (
+                <button className="secondary-btn" onClick={openEditAnimal}>
+                  Edit Animal
+                </button>
+              )}
+            </div>
 
             {!selectedAnimal && (
               <div className="empty-box">No animal selected.</div>

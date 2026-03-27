@@ -1,6 +1,8 @@
-# Buffalo Herd App - Fresh Phase 1 Safe
+# Buffalo Herd App - Phase 2
 
-This is the fresh deployment-safe starter.
+Included:
+- phase 1 base
+- edit animal
+- browser local save using localStorage
 
-Upload these files directly to the GitHub repository root.
-Do not upload the outer folder itself.
+Upload these files directly to the GitHub repository root and redeploy.
