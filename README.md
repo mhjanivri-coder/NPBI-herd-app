@@ -1,8 +1,13 @@
-# Buffalo Herd App - Phase 3
+# Buffalo Herd App - Phase 4
 
 Included:
-- phase 2 features
-- delete selected animal
-- clear all browser data with confirmation
+- phase 3 features
+- female category: Heifer / Milk / Dry
+- female workflow tabs:
+  - Pedigree
+  - Reproduction
+  - Calving
+  - Health
+  - History
 
 Upload these files directly to the GitHub repository root and redeploy.

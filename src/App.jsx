@@ -173,6 +173,35 @@ export default function App() {
     setMessage("Animal updated successfully.");
   }
 
+  function deleteSelectedAnimal() {
+    if (!selectedAnimal) return;
+    const ok = window.confirm(
+      `Delete animal ${selectedAnimal.tagNo}? This cannot be undone.`
+    );
+    if (!ok) return;
+
+    const nextAnimals = animals.filter((animal) => animal.id !== selectedAnimal.id);
+    setAnimals(nextAnimals);
+    setSelectedId(null);
+    setShowEdit(false);
+    setMessage(`Animal ${selectedAnimal.tagNo} deleted.`);
+  }
+
+  function clearAllBrowserData() {
+    const ok = window.confirm(
+      "Clear all animals saved in this browser? This cannot be undone."
+    );
+    if (!ok) return;
+
+    setAnimals([]);
+    setSelectedId(null);
+    setShowAdd(false);
+    setShowEdit(false);
+    setForm({ ...EMPTY_ANIMAL });
+    setEditForm({ ...EMPTY_ANIMAL });
+    setMessage("All browser-saved herd data cleared.");
+  }
+
   return (
     <div className="page">
       <div className="container">
@@ -180,15 +209,20 @@ export default function App() {
           <div className="header-row">
             <div>
               <h1>Buffalo Animal Data Recording App</h1>
-              <p>Phase 2 · edit animal + browser save</p>
+              <p>Phase 3 · edit + browser save + delete and reset controls</p>
             </div>
 
-            <button
-              className="primary-btn"
-              onClick={() => setShowAdd((prev) => !prev)}
-            >
-              {showAdd ? "Close Add Animal" : "Add Animal"}
-            </button>
+            <div className="button-row top-actions">
+              <button
+                className="primary-btn"
+                onClick={() => setShowAdd((prev) => !prev)}
+              >
+                {showAdd ? "Close Add Animal" : "Add Animal"}
+              </button>
+              <button className="danger-btn" onClick={clearAllBrowserData}>
+                Clear Browser Data
+              </button>
+            </div>
           </div>
         </section>
 
@@ -440,6 +474,9 @@ export default function App() {
             <div className="button-row">
               <button className="primary-btn" onClick={saveEditedAnimal}>
                 Save Changes
+              </button>
+              <button className="danger-btn" onClick={deleteSelectedAnimal}>
+                Delete Animal
               </button>
               <button
                 className="secondary-btn"
